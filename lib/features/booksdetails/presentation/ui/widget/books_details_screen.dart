@@ -131,7 +131,6 @@ class BooksDetailsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    // هنا استخدمنا الويدجت الجديد القابل للتوسيع مع Read more ملتصق
                     _ExpandableDescription(text: _removeHtmlTags(book.description)),
 
                     const SizedBox(height: 12),
