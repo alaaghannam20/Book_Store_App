@@ -76,7 +76,7 @@ class _AllBooksScreenState extends State<AllBooksScreen> {
     return Scaffold(
       backgroundColor: AppColors.screenColor,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
