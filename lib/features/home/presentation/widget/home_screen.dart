@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 BestSellerWidget(bestSellerBooks: state.books),
                                 SizedBox(height: 24),
-                                RecomendedPart(),
+                                RecomendedPart(limit: 2),
                                 SizedBox(height: 24),
                                 FlashSalePart(books: state.books),
                               ],

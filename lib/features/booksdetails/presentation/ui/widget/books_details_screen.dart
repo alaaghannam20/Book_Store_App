@@ -1,3 +1,4 @@
+import 'package:bookstore_app/core/models/products_models.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,17 +6,67 @@ import 'package:bookstore_app/core/theme/colors.dart';
 import 'package:bookstore_app/features/booksdetails/presentation/manager/book_details_cubit.dart';
 import 'package:bookstore_app/features/booksdetails/presentation/manager/quantity_manager_cubit.dart';
 import 'package:bookstore_app/features/booksdetails/presentation/ui/widget/add_to_cart_widget.dart';
+import 'package:bookstore_app/features/home/presentation/manager/recomended_cubit.dart';
+import 'package:bookstore_app/features/home/presentation/widget/recomended_card.dart';
 
-class BooksDetailsScreen extends StatelessWidget {
+
+class BooksDetailsScreen extends StatefulWidget {
   final int booksId;
   const BooksDetailsScreen({super.key, required this.booksId});
 
   @override
+  State<BooksDetailsScreen> createState() => _BooksDetailsScreenState();
+}
+
+class _BooksDetailsScreenState extends State<BooksDetailsScreen> {
+  late final PageController _recommendedPageController;
+  int currentRecommendedIndex = 0;
+
+    @override
+  void initState() {
+    super.initState();
+     _recommendedPageController = PageController(viewportFraction: 1.0);
+  }
+
+  @override
+void dispose() {
+  _recommendedPageController.dispose();
+  super.dispose();
+}
+
+    void goBack() {
+    if (currentRecommendedIndex > 0) {
+      setState(() {
+        currentRecommendedIndex--;
+        _recommendedPageController.animateToPage(
+          currentRecommendedIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      });
+    }
+  }
+
+   void goForward(int max) {
+    if (currentRecommendedIndex < max - 1) {
+      setState(() {
+        currentRecommendedIndex++;
+        _recommendedPageController.animateToPage(
+          currentRecommendedIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      });
+    }
+  }
+  @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => BookDetailsCubit()..loadBookInfo(booksId)),
+        BlocProvider(create: (_) => BookDetailsCubit()..loadBookInfo(widget.booksId)),
         BlocProvider(create: (_) => QuantityManagerCubit()),
+        BlocProvider(
+            create: (_) => RecommendedCubit()..fetchRecommendedBooks()),
       ],
       child: Scaffold(
         appBar: AppBar(
@@ -32,7 +83,7 @@ class BooksDetailsScreen extends StatelessWidget {
             } else if (state is BookDetailsSuccess) {
               final book = state.books;
               return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),  
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -130,9 +181,8 @@ class BooksDetailsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-
-                    _ExpandableDescription(text: _removeHtmlTags(book.description)),
-
+                    _ExpandableDescription(
+                        text: _removeHtmlTags(book.description)),
                     const SizedBox(height: 12),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -157,9 +207,7 @@ class BooksDetailsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-
                         const Spacer(),
-
                         _InfoTag(
                           label: book.stock > 0 ? "In Stock" : "Out of Stock",
                           color: book.stock > 0
@@ -184,7 +232,44 @@ class BooksDetailsScreen extends StatelessWidget {
                             icon: Icons.local_shipping),
                       ],
                     ),
-                    SizedBox(height: 16,),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    DefaultTabController(
+                        length: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TabBar(
+                                  isScrollable: true,
+                                  labelColor: AppColors.blackColor,
+                                  unselectedLabelColor: AppColors.greyColor,
+                                  indicatorColor: Color(0xFFEAA451),
+                                  tabs: [
+                                    Tab(text: 'Product Details'),
+                                    Tab(text: 'Customer Reviews'),
+                                    Tab(text: 'Recomended For You'),
+                                  ]),
+                            ),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            SizedBox(
+                              height: 299,
+                              child: TabBarView(
+                                children: [
+                                  _buildProductDetailsTab(book),
+                                  Center(
+                                      child:
+                                          Text("Customer Reviews")), 
+                                  _buildRecommendedTab(), 
+                                ],
+                              ),
+                            )
+                          ],
+                        ))
                   ],
                 ),
               );
@@ -194,8 +279,7 @@ class BooksDetailsScreen extends StatelessWidget {
             return const SizedBox();
           },
         ),
-        
-        bottomNavigationBar: AddToCartWidget(bookId: booksId),
+        bottomNavigationBar: AddToCartWidget(bookId: widget.booksId),
       ),
     );
   }
@@ -203,6 +287,136 @@ class BooksDetailsScreen extends StatelessWidget {
   String _removeHtmlTags(String htmlContent) {
     return htmlContent.replaceAll(RegExp(r'<[^>]*>'), '');
   }
+
+  Widget _buildProductDetailsTab(Products book) {
+    return ListView(
+      padding: const EdgeInsets.only(top: 8),
+      children: [
+        _buildDetailRow("Book Title", book.name),
+        _buildDetailRow("Author", book.category),
+        _buildDetailRow("Publication Date", "1997"),
+        _buildDetailRow("ASIN", book.id.toString()),
+        _buildDetailRow("Language", "English"),
+        _buildDetailRow("Publisher", "Printer"),
+        _buildDetailRow("Pages", "336"),
+        _buildDetailRow("Book Format", "Hard Cover"),
+        _buildDetailRow("Best Seller Rank", "#${book.bestSeller}"),
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: "$title : ",
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColors.borderColor,
+                fontSize: 14,
+              ),
+            ),
+            TextSpan(
+              text: value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.greyColor,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+Widget _buildRecommendedTab() {
+  return BlocBuilder<RecommendedCubit, RecomendedState>(
+    builder: (context, state) {
+      if (state is RecomendedLoading) {
+        return Center(child: CircularProgressIndicator());
+      } else if (state is RecomendedError) {
+        return Center(child: Text(state.msg));
+      } else if (state is RecomendedSuccess) {
+        final books = state.books;
+        final hasPrevious = currentRecommendedIndex > 0;
+        final hasNext = currentRecommendedIndex < books.length - 1;
+
+        return Column(
+          children: [
+            SizedBox(
+               height: 190, 
+  width: double.infinity,
+              child: SizedBox(
+                child: PageView.builder(
+                  controller: _recommendedPageController,
+                  itemCount: books.length,
+                  onPageChanged: (index) {
+                    setState(() {
+                      currentRecommendedIndex = index;
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    final book = books[index];
+                    return RecomendedCard(
+                      book: book,
+                      bookId: book.id,
+                      imageUrl: book.image,
+                      bookTitle: book.name,
+                      authorName: book.category,
+                      bookPrice: book.priceAfterDiscount,
+                      rating: 4.5,
+                      totalReviews: 180,
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  height: 36,
+                  width: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.hintTextColor, width: 1),
+                  ),
+                  child: IconButton(
+                    onPressed: hasPrevious ? goBack : null,
+                    icon: const Icon(Icons.arrow_back_ios, size: 20, weight: 1.5),
+                    color: hasPrevious ? AppColors.blackColor : AppColors.borderColor,
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Container(
+                  height: 36,
+                  width: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.hintTextColor, width: 1),
+                  ),
+                  child: IconButton(
+                    onPressed: hasNext ? () => goForward(books.length) : null,
+                    icon: const Icon(Icons.arrow_forward_ios, size: 20, weight: 1.5),
+                    color: hasNext ? AppColors.blackColor : AppColors.borderColor,
+                  ),
+                ),
+              ],
+            )
+          ],
+        );
+      } else {
+        return const SizedBox.shrink();
+      }
+    },
+  );
+}
+
 }
 
 class _ExpandableDescription extends StatefulWidget {
@@ -218,11 +432,12 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = const TextStyle(fontSize: 12, color: AppColors.greyColor);
-    final linkStyle = const TextStyle(fontSize: 12, color: AppColors.blackColor, fontWeight: FontWeight.w600);
+    final defaultStyle =
+        const TextStyle(fontSize: 12, color: AppColors.greyColor);
+    final linkStyle = const TextStyle(
+        fontSize: 12, color: AppColors.blackColor, fontWeight: FontWeight.w600);
 
     if (isExpanded) {
-      // النص مكشوف كامل + زر Read less مع سهم مثلث لأعلى
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -239,14 +454,15 @@ class _ExpandableDescriptionState extends State<_ExpandableDescription> {
               children: [
                 Text("Read less", style: linkStyle),
                 const SizedBox(width: 4),
-                const Text("▲", style: TextStyle(fontSize: 14, color: AppColors.blackColor)),
+                const Text("▲",
+                    style:
+                        TextStyle(fontSize: 14, color: AppColors.blackColor)),
               ],
             ),
           ),
         ],
       );
     } else {
-
       return LayoutBuilder(
         builder: (context, constraints) {
           final textPainter = TextPainter(

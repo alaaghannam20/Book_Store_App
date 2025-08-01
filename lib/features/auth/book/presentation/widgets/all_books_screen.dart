@@ -9,6 +9,7 @@ import 'package:bookstore_app/features/auth/book/presentation/widgets/book_cart.
 import 'package:bookstore_app/features/home/presentation/widget/search_text.dart';
 import 'package:flutter/material.dart';
 
+
 class AllBooksScreen extends StatefulWidget {
   const AllBooksScreen({super.key});
 
@@ -111,7 +112,6 @@ class _AllBooksScreenState extends State<AllBooksScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    /// عرض نتائج البحث
                     if (resultsSearch.isNotEmpty)
                       GridView.builder(
                         shrinkWrap: true,

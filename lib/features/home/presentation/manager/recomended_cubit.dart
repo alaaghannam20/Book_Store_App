@@ -10,7 +10,7 @@ part 'recomended_state.dart';
 class RecommendedCubit extends Cubit<RecomendedState> {
   RecommendedCubit() : super(RecomendedInitial());
 
-  Future<void> fetchRecommendedBooks() async {
+  Future<void> fetchRecommendedBooks({int? limit}) async {
     emit(RecomendedLoading());
 
     try {
@@ -18,10 +18,11 @@ class RecommendedCubit extends Cubit<RecomendedState> {
 
       if (response?.statusCode == 200 &&
           response?.data['data']?['products'] != null) {
-        final books = (response!.data['data']['products'] as List)
-            .map((e) => Products.fromJson(e))
-            .take(2)
-            .toList();
+        var allBooks = (response!.data['data']['products'] as List)
+        .map((e) => Products.fromJson(e))
+        .toList();
+
+       final books = limit != null ? allBooks.take(limit).toList() : allBooks;
 
         emit(RecomendedSuccess(books));
       } else {

@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RecomendedPart extends StatelessWidget {
-  const RecomendedPart({super.key});
+  final int? limit;
+  const RecomendedPart({super.key , this.limit});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +18,9 @@ class RecomendedPart extends StatelessWidget {
           if (state is RecomendedLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is RecomendedSuccess) {
+              final displayedBooks = limit != null
+                ? state.books.take(limit!).toList()
+                : state.books;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -61,7 +65,7 @@ class RecomendedPart extends StatelessWidget {
                     ],
                   ),
                 ),
-                ...state.books.map((book) => RecomendedCard(
+                 ...displayedBooks.map((book) => RecomendedCard(
                     book: book,
                     bookId: book.id,
                     imageUrl: book.image,

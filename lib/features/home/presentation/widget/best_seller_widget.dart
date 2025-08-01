@@ -51,8 +51,7 @@ class _BestSellerWidgetState extends State<BestSellerWidget> {
   @override
   Widget build(BuildContext context) {
     final bool hasPrevious = currentIndexBookPage > 0;
-    final bool hasNext =
-        currentIndexBookPage < widget.bestSellerBooks.length - 1;
+    final bool hasNext =  currentIndexBookPage < widget.bestSellerBooks.length - 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -138,7 +137,7 @@ class _BestSellerWidgetState extends State<BestSellerWidget> {
             ),
             child: IconButton(onPressed: hasNext ? goForward : null,
              icon: Icon(Icons.arrow_forward_ios , size: 20, weight: 1.5,),
-             color: hasPrevious ? AppColors.blackColor : AppColors.borderColor,
+             color: hasNext ? AppColors.blackColor : AppColors.borderColor,
           ),
           ),
         ],
